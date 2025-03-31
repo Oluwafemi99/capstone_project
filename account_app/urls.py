@@ -3,9 +3,12 @@ from .views import (AccountCreateView, AccountDetailView, AccountListView,
                     CustomerCreateView, CustomerDetailView, CustomerListView,
                     TransactionDetailView, TransactionListView,
                     DepositTransactionCreateView, WithdrawTransactionCreateView)
+from django.contrib.auth.views import LoginView, LogoutView
 
-urlspatterns = [
+urlpatterns = [
     path('register/', CustomerCreateView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('customer/<int:pk>/', CustomerDetailView.as_view(), name='customer_details'),
     path('customer/', CustomerListView.as_view(), name='customer_list'),
     path('account/create/', AccountCreateView.as_view(), name='account_create'),
