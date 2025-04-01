@@ -10,8 +10,9 @@ class Customer(models.Model):
     address = models.TextField(max_length=200)
     phone_number = models.IntegerField()
 
+
     def __str__(self):
-        return self.user
+        return f'{self.user.first_name} {self.user.last_name}'
 
 
 class Account(models.Model):
@@ -24,7 +25,7 @@ class Account(models.Model):
     account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
-    account_number = models.CharField(max_length=10, unique=True, blank=True)
+    account_number = models.CharField(max_length=10, unique=True)
 
     def save(self, *args, **kwargs):
         if not self.account_number:
