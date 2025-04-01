@@ -6,7 +6,16 @@ from django.contrib.auth.models import User
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = '__all__'
+        fields = ['id', 'customer', 'account_type', 'balance', 'account_number', 'created_at']
+        read_only_fields = ['created_at']
+
+    def validate(self, data):
+        # Check if the customer already has an account of the same type
+        customer = data.get('customer')
+        account_type = data.get('account_type')
+        if Account.objects.filter(customer=customer, account_type=account_type).exists():
+            raise serializers.ValidationError(f"The customer already has a {account_type} account.")
+        return data
 
 
 class TransactionSerializer(serializers.ModelSerializer):
