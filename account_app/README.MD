@@ -14,8 +14,8 @@ body
         "username": "newuser",
         "password": "1234",
         "email": "",
-        "first_name": "den",
-        "last_name": "kit"
+        "first_name": "Ola",
+        "last_name": "Dada"
     },
     "email": "custxample.com",
     "address": "103 lain Street",
@@ -82,4 +82,21 @@ http://127.0.0.1:8000/account/customer/
 
 * transaction list
 Get
-http://127.0.0.1:8000/account/transaction/
+http://127.0.0.1:8000/account/transactions/all/
+
+
+*transfer
+post
+http://127.0.0.1:8000/account/withdraw/
+
+body
+{
+"account": 1,
+    "recipient_account": "9876543210",
+    "amount": 100.00,
+    "recipient": "John Doe"
+}
+
+*customer transaction list
+Get
+http://127.0.0.1:8000/account/customer/transactions/

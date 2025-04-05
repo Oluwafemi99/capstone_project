@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Customer, Account, Transaction
+from .models import Customer, Account, Transaction, Recipient_Account
 from django.contrib.auth.models import User
 
 
@@ -23,6 +23,41 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = ['id', 'account', 'transaction_type', 'amount', 'time_stamp']
         read_only_fields = ['transaction_type', 'time_stamp']
+
+
+class TransferTransactionSerializer(serializers.ModelSerializer):
+    recipient_account = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['id', 'account', 'transaction_type', 'amount', 'recipient', 'recipient_account', 'time_stamp']
+        read_only_fields = ['transaction_type', 'time_stamp']
+
+    def validate(self, data):
+        account = data.get('account')
+        recipient_account = data.get('recipient_account')
+        amount = data.get('amount')
+        # Ensure that sender account has suficient balance
+        if account.balance < amount:
+            raise serializers.ValidationError({'Insufficient balance for the transfer.'})
+        # Ensure the recipient account is valid and not the same as the sender's account
+        if recipient_account == account:
+            raise serializers.ValidationError({'sender and recipient account can not be the same'})
+        return data
+
+    def create(self, validated_data):
+        # Extract recipient account number
+        recipient_account_number = validated_data.pop('recipient_account')
+
+        # Check if the recipient account already exists, otherwise create it
+        recipient_account, created = Recipient_Account.objects.get_or_create(account_number=recipient_account_number)
+
+        # Add the recipient_account object to the validated data
+        validated_data['recipient_account'] = recipient_account
+
+        # Create the transaction object
+        transaction = Transaction.objects.create(**validated_data)
+        return transaction
 
 
 class UserSerializer(serializers.ModelSerializer):

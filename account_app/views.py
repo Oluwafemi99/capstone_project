@@ -1,16 +1,19 @@
 from django.shortcuts import render
 from rest_framework import generics, permissions
 from .serializers import (AccountSerializer, TransactionSerializer,
-                          CustomerSerializer)
+                          CustomerSerializer, TransferTransactionSerializer)
 from .models import Account, Customer, Transaction
 from rest_framework.exceptions import ValidationError
 
 
 # Create your views here.
 class ProfileView(generics.RetrieveAPIView):
-    queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        customer = Customer.objects.get(user=self.request.user)
+        return customer
 
 
 class AccountListView(generics.ListAPIView):
@@ -23,16 +26,6 @@ class AccountCreateView(generics.CreateAPIView):
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
     permission_classes = [permissions.AllowAny]
-
-    def perform_create(self, serializer):
-        customer = serializer.validated_data['customer']
-        account_type = serializer.validated_data['account_type']
-
-        # Check if the customer already has an account of the same type
-        if Account.objects.filter(customer=customer, account_type=account_type).exists():
-            raise ValidationError({"detail": f"The customer already has a {account_type} account."})
-
-        serializer.save()
 
 
 class AccountDetailView(generics.RetrieveAPIView):
@@ -82,33 +75,55 @@ class WithdrawTransactionCreateView(generics.CreateAPIView):
         # Custom logic for withdraw transaction
         account = serializer.validated_data['account']
         amount = serializer.validated_data['amount']
+
         # Ensure the account belongs to the authenticated customer
         customer = Customer.objects.get(user=self.request.user)
         if account.customer != customer:
             raise ValidationError({"detail": "You are not authorized to perform transactions on this account."})
 
+        # Ensure the account balance is not less than the amount
         if account.balance < amount:
-            raise ValidationError({"detail": "Insufficient balance for withdrawal."})
+            raise ValidationError({"detail": "Insufficient balance."})
+
+        # Deduct amount from account balance
         account.balance -= amount
         account.save()
-        serializer.save(transaction_type='withdraw')
+        serializer.save(transaction_type='WITHDRAW')
+
+
+class TransferTransactionCreateview(generics.CreateAPIView):
+    queryset = Transaction.objects.all()
+    serializer_class = TransferTransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        amount = serializer.validated_data['amount']
+        account = serializer.validated_data['account']
+        # Ensure the account belongs to the authenticated customer
+        customer = Customer.objects.get(user=self.request.user)
+        if account.customer != customer:
+            raise ValidationError({'detail': 'You are not authorized to perform transactions on this account.'})
+
+        # Deduct the amount from the sender's account
+        account.balance -= amount
+        account.save()
+        serializer.save(transaction_type='TRANSFER')
 
 
 class DepositTransactionCreateView(generics.CreateAPIView):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def perform_create(self, serializer):
         # Custom logic for deposit transaction
         account = serializer.validated_data['account']
         amount = serializer.validated_data['amount']
-        customer = Customer.objects.get(user=self.request.user)
-        if account.customer != customer:
-            raise ValidationError({"detail": "You are not authorized to perform transactions on this account."})
+
+        # Add amount to the account balance
         account.balance += amount
         account.save()
-        serializer.save(transaction_type='deposit')
+        serializer.save(transaction_type='DEPOSIT')
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
@@ -120,3 +135,16 @@ class TransactionDetailView(generics.RetrieveAPIView):
         customer = Customer.objects.get(user=self.request.user)
         # Restrict the queryset to transactions related to the customer's accounts
         return Transaction.objects.filter(account__customer=customer)
+
+
+class CustomerTransactionListView(generics.ListAPIView):
+    serializer_class = TransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Get the authenticated user's customer object
+        customer = Customer.objects.get(user=self.request.user)
+
+        # Get the transactions related to the customer's accounts
+        transaction = Transaction.objects.filter(account__customer=customer)
+        return transaction

@@ -10,7 +10,6 @@ class Customer(models.Model):
     address = models.TextField(max_length=200)
     phone_number = models.IntegerField()
 
-
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
 
@@ -47,15 +46,23 @@ class Account(models.Model):
         return f'{self.customer} - {self.account_type} - {self.account_number}'
 
 
+class Recipient_Account(models.Model):
+    account_number = models.CharField(max_length=10, unique=True)
+    time_stamp = models.DateTimeField(auto_now_add=True)
+
+
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
         ('DEPOSIT', 'deposit'),
         ('WITHDRAW', 'withdraw'),
+        ('TRANSFER', 'transfer'),
     ]
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     transaction_type = models.CharField(max_length=100, choices=TRANSACTION_TYPES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     time_stamp = models.DateTimeField(auto_now_add=True)
+    recipient = models.CharField(max_length=50, null=True,)
+    recipient_account = models.ForeignKey(Recipient_Account, on_delete=models.CASCADE, related_name='recieved_transactions', null=True)
 
     def __str__(self):
         return f'{self.transaction_type} - {self.amount} - {self.time_stamp}'
