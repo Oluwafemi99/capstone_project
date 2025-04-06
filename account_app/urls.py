@@ -20,6 +20,6 @@ urlpatterns = [
     path('transaction/<int:pk>/', TransactionDetailView.as_view(), name='transaction_details'),
     path('transactions/all/', TransactionListView.as_view(), name='transaction_list'),
     path('deposit/', DepositTransactionCreateView.as_view(), name='deposit'),
-    path('withdrawal/', WithdrawTransactionCreateView.as_view(), name='withdraw'),
+    path('withdraw/', WithdrawTransactionCreateView.as_view(), name='withdraw'),
     path('customer/transactions/', CustomerTransactionListView.as_view(), name='customer_transaction'),
 ]

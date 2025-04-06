@@ -11,15 +11,15 @@ http://127.0.0.1:8000/account/register/
 body
 {
     "user": {
-        "username": "newuser",
+        "username": "ola",
         "password": "1234",
         "email": "",
         "first_name": "Ola",
         "last_name": "Dada"
     },
-    "email": "custxample.com",
+    "email": "example@gmail.com",
     "address": "103 lain Street",
-    "phone_number": 1239967887,
+    "phone_number": 1239967885,
 }
 
 *create account
@@ -37,7 +37,7 @@ post
 http://127.0.0.1:8000/account/login/
 
 {
-    "username": "newuser"
+    "username": "ola",
     "password": "1234"
 }
 
@@ -59,7 +59,7 @@ http://127.0.0.1:8000/account/deposit/
     "amount": 
 }
 
-*account details
+*customer account details
 Get
 http://127.0.0.1:8000/account/account/pk/
 
@@ -69,7 +69,7 @@ http://127.0.0.1:8000/account/customer/pk/
 
 *transaction details
 Get
-http://127.0.0.1:8000/account/account/pk/
+http://127.0.0.1:8000/account/transaction/pk/
 
 
 * account list
@@ -87,11 +87,11 @@ http://127.0.0.1:8000/account/transactions/all/
 
 *transfer
 post
-http://127.0.0.1:8000/account/withdraw/
+http://127.0.0.1:8000/account/transfer/
 
 body
 {
-"account": 1,
+    "account": 1,
     "recipient_account": "9876543210",
     "amount": 100.00,
     "recipient": "John Doe"
